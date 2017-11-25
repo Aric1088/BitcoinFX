@@ -1,5 +1,10 @@
 import json
 from urllib.request import urlopen
+from lxml import html
+import requests
+import os
+import time
+
 #13f1989492032b11a1470f3b4d9fbbe7 <- api key for access
 #apistring = http://apilayer.net/api/live?access_key=
 #13f1989492032b11a1470f3b4d9fbbe7&currencies=USD,AUD,CAD,PLN,MXN&format=1
@@ -10,52 +15,62 @@ from urllib.request import urlopen
 def decode_dict(url):
     return json.loads(urlopen(url).read().decode('utf-8'))
 
-# Returns all the currencies from the bitcoin ticker, and creates a string
-# appending them all together for apilayer, returning a string of all them
-# currencies in comparison to the US dollar
-def currencies_to_string(dictx):
-    currencies = dictx.keys()
-    initstring = ""
-    for i in currencies:
-        initstring += i + ","
-    initstring = initstring[:-1]
-    initstring = "http://apilayer.net/api/live?access_key=13f1989492032b11a1470f3b4d9fbbe7&currencies=" + initstring + "&format=1"
-    return initstring
+# Returns all the currencies from the bitcoin ticker
+source ="https://blockchain.info/ticker"
+bitcoin_dict = decode_dict(source)
 
+# Scrapes foreign exchange data from google finance
+def scrape_ccratio(basekey, conkey):
+    page = requests.get("https://finance.google.com/finance/converter?a=1&from=" + basekey + "&to=" + conkey + "&")
+    tree = html.fromstring(page.content)
+    currencyratio = tree.xpath('//span[@class="bld"]/text()')
+    return float(currencyratio[0].split()[0])
 
-
+# Looks up specific value of item in bitdict
 def lookup_bitval(key, bitdict):
-    tempdict = bitdict.get(key)
-    buyval = tempdict.get("buy")
-    sellval = tempdict.get("sell")
-    return (key, buyval, sellval)
+    return (bitdict.get(key)).get("buy")
 
-
-
-def convert_bitvalue(key2, bdict, cqdict):
-    key = "USD" + key2
-    usdata = lookup_bitval("USD", bdict)
-    usprice = usdata[1]
-    keydata = lookup_bitval(key2, bdict)
-    keyprice =keydata[1]
-    ccratio = cqdict.get(key)
-    usconprice = keyprice/ccratio
-    keyconprice = usprice/(1/ccratio)
-    infos = "It costs USD " + str(usprice) + " in US markets to obtain one bitcoin. \nIt costs " + str(key2) + " " + str(keyprice) + " in " + key2 +" markets to obtain one bitcoin. \nBuying a bitcoin in " + str(key2) + " markets costs USD " + str(usconprice) + " equivalently. \nBuying a bitcoin in USD markets costs " + str(key2) + " " + str(keyconprice) + " equivalently."
-    analysis1 = "\nBuying a bitcoin in USD markets and reselling in " + key2 + " markets would yield a net profit of USD " + str(usconprice - usprice)
-    analysis2 = "\nBuying a bitcoin in " + key2 + " markets and reselling in USD markets would yield a net profit of " + key2 + " " + str(keyconprice - keyprice)
-    return "\nBitcoin Price Analysis:\n\n" + infos + analysis1 + analysis2
+# Sees the buying and selling opportunities of two bitcoin markets
+def convert_bitvalue(basekey, conkey, bdict):
+    baseprice = lookup_bitval(basekey, bdict)
+    conprice = lookup_bitval(conkey, bdict)
+    baseconprice = conprice*(scrape_ccratio(conkey,basekey))
+    conconprice = baseprice*(scrape_ccratio(basekey,conkey))
+    s1 = "\nIt costs " + basekey + " " + str(baseprice) + " in " + basekey + " markets to obtain one bitcoin."
+    s2 = " \nIt costs " + conkey + " " + str(conprice) + " in " + conkey +" markets to obtain one bitcoin."
+    s3 = "\nBuying a bitcoin in " + conkey + " markets costs " + basekey + " " + str(baseconprice) + " equivalently."
+    s4 = "\nBuying a bitcoin in " + basekey + " markets costs " + conkey + " " + str(conconprice) + " equivalently."
+    analysis1 = "\nBuying a bitcoin in " + basekey + " markets and reselling in " + conkey + " markets would yield a net profit of " + basekey + " " + str(baseconprice - baseprice)
+    analysis2 = "\nBuying a bitcoin in " + conkey + " markets and reselling in " + basekey + " markets would yield a net profit of " + conkey + " " + str(conconprice - conprice)
+    return "\nBitcoin Price Analysis:\n\n" + s1 + s2 + s3 + s4 + analysis1 + analysis2
 
 
 
 source ="https://blockchain.info/ticker"
 bitcoin_dict = decode_dict(source)
-currency_dict = decode_dict(currencies_to_string(bitcoin_dict))
-currency_quotes_dict = currency_dict.get("quotes")
-
 while True:
-    currentinput = input("Enter a currency: ")
+    basekey = input("Enter a base currency: ")
+    conkey = input("Enter your desired currency: ")
+    while True:
+        while True:
+            try:
+
+                print(tempstring)
+                string = tempstring
+            except:
+                print("")
+            stringl = (convert_bitvalue(basekey, conkey, bitcoin_dict))
+            tempstring = stringl
+            time.sleep(3)
+            os.system('cls')
     try:
-        print(convert_bitvalue(currentinput, bitcoin_dict, currency_quotes_dict))
+        while True:
+            try:
+                print(stringl)
+            except:
+                print("")
+            stringl = (convert_bitvalue(basekey, conkey, bitcoin_dict))
+            time.sleep(3)
+            os.system('cls')
     except:
         print("Currency not found in database")
