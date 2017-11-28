@@ -63,14 +63,5 @@ while True:
             tempstring = stringl
             time.sleep(3)
             os.system('cls')
-    try:
-        while True:
-            try:
-                print(stringl)
-            except:
-                print("")
-            stringl = (convert_bitvalue(basekey, conkey, bitcoin_dict))
-            time.sleep(3)
-            os.system('cls')
     except:
         print("Currency not found in database")
