@@ -2,8 +2,6 @@ import json
 from urllib.request import urlopen
 from lxml import html
 import requests
-import os
-import time
 
 #13f1989492032b11a1470f3b4d9fbbe7 <- api key for access
 #apistring = http://apilayer.net/api/live?access_key=
@@ -51,26 +49,7 @@ bitcoin_dict = decode_dict(source)
 while True:
     basekey = input("Enter a base currency: ")
     conkey = input("Enter your desired currency: ")
-    while True:
-        while True:
-            try:
-
-                print(tempstring)
-                string = tempstring
-            except:
-                print("")
-            stringl = (convert_bitvalue(basekey, conkey, bitcoin_dict))
-            tempstring = stringl
-            time.sleep(3)
-            os.system('cls')
     try:
-        while True:
-            try:
-                print(stringl)
-            except:
-                print("")
-            stringl = (convert_bitvalue(basekey, conkey, bitcoin_dict))
-            time.sleep(3)
-            os.system('cls')
+       print(convert_bitvalue(basekey, conkey, bitcoin_dict))
     except:
         print("Currency not found in database")

@@ -1,2 +1,2 @@
-py Main.py
+py BitcoinFX.py
 pause
